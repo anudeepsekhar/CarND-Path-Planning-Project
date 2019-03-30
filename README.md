@@ -18,16 +18,12 @@ To run the simulator on Mac/Linux, first make the binary file executable with th
 ```shell
 sudo chmod u+x {simulator_file_name}
 ```
-
-
 ## Basic Build Instructions
 
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
-4. Run it: `./path_planning`.
-
-
+4. Run it: `./path_planning`
 
 ## Dependencies
 
@@ -49,3 +45,29 @@ sudo chmod u+x {simulator_file_name}
     cd uWebSockets
     git checkout e94b6e1
     ```
+## Rubic Points
+### Compilation 
+#### 1. The code compiles correctly.
+No changes were made in the cmake configuration and the code compiles without an error. A new file was added src/spline.h. It is the Cubic Spline interpolation implementation: a single .h file you can use splines instead of polynomials. It was a great suggestion from the classroom QA video.
+
+### Valid Trajectories 
+#### 1. The car is able to drive at least 4.32 miles without incident.
+The car was able to drive more 4.32 miles comfortably at a average speed of 47.5 mph.
+![image2](./images/img2.png)
+
+Then I ran the car for over 9 miles without any incedent.
+![image1](./images/img1.png)
+
+#### 2. The car drives according to the speed limit.
+No speed limit red message was seen.
+#### 3. Max Acceleration and Jerk are not Exceeded. 
+Max jerk warning was not seen.
+#### 4. Car does not have collisions.
+No collisions occured.
+#### 5. The car stays in its lane, except for the time between changing lanes.
+The car stays in its lane most of the time but when it changes lane because of traffic or to return to the center lane.
+#### 6. The car is able to change lanes.
+The car change lanes when the there is a slow car in front of it, and it is safe to change lanes (no other cars around) or when it is safe to return the center lane.
+
+### Reflection
+
