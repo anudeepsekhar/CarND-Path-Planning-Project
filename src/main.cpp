@@ -116,11 +116,13 @@ int main() {
           //set flag for vehicle detection
           bool car_ahead = false;
           bool car_left = false;
+          bool car_left_ahead = false;
           bool car_right = false;
+          bool car_right_ahead = false;
           bool lane_free = false;
-          bool lane_change_left = false;
-          bool lane_change_right = false;
-          bool stay_in_lane = true;
+          double lane_change_left = 0;
+          double lane_change_right = 0;
+          double stay_in_lane = 10;
           bool slow_down = false;
           double car_dist = 1;
           double cara_speed = ref_vel; 
@@ -151,18 +153,24 @@ int main() {
               //check if we are too close to the car
               if ((check_car_s > car_s) && ((check_car_s - car_s) < max_dist)){
                 car_ahead = true;
-                car_dist = check_car_s - car_s;
+                car_dist = check_car_s - car_s; // Calculate the distance from detected vehicle
                 cara_speed = check_car_v;
               }
               }
-              else if((car_lane - lane == -1)){
+              else if((car_lane - lane == -1)){// Check the lane to the left
                 if (((check_car_s < car_s) && ((car_s - check_car_s-15) < car_width))||((check_car_s > car_s) && ((check_car_s - car_s) < car_width))){
                   car_left = true;
                 }
+                if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width+3))){ // Check for car a little ahead in the lane to the left
+                  car_left_ahead = true;
+                }
               }
-              else if((car_lane - lane == 1)){
+              else if((car_lane - lane == 1)){// Check the lane to the right
                 if (((check_car_s < car_s) && ((car_s - check_car_s-15) < car_width))||((check_car_s > car_s) && ((check_car_s - car_s) < car_width))){
                   car_right = true;
+                }
+                if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width + 3))){// Check for car a little ahead in the lane to the right
+                  car_right_ahead = true;
                 }
               }else if(lane == 0){
                 car_left = true;
@@ -173,61 +181,87 @@ int main() {
           
 
           /*###################################################      Behavior Planning       ###############################################################*/
+          
+          // //DEBUG
+          // std::cout << "car ahead: "<< car_ahead <<std::endl;
+          // std::cout << "car left: "<< car_left <<std::endl;
+          // std::cout << "car right: "<< car_right <<std::endl;
+          // std::cout << "car dist: "<< car_dist <<std::endl;
+          
           double throttle_p = 0.5;
-          //DEBUG
-          std::cout << "car ahead: "<< car_ahead <<std::endl;
-          std::cout << "car left: "<< car_left <<std::endl;
-          std::cout << "car right: "<< car_right <<std::endl;
-          std::cout << "car dist: "<< car_dist <<std::endl;
           double brake = 0;
 
           brake = (ref_vel - cara_speed)/car_dist;
+          
+          // Determine what behavior to execute...
 
           if (car_ahead){
             slow_down = true;
-            // check if lane change left possible
-            if (!car_left){
+            stay_in_lane -= 3; // penalize staying in the lane
+
+            if (!car_left){ // check if lane change left possible
               slow_down = false;
-              lane_change_left = true;
+              lane_change_left += 5; // Favor changing lane to the left
+              stay_in_lane -= 5; // Further penalize staying in current lane because lane change is possible
               
-            }else if(!car_right){
+            }else if(!car_right){ // check if lane change right possible
               slow_down = false;
-              lane_change_right = true;
+              lane_change_right += 5; // Favor changing lane to the right
+              stay_in_lane -= 5; // Further penalize staying in current lane because lane change is possible
               
             }else{
+              stay_in_lane = 10; // Favour staying in current lane
               slow_down = true;
-            }           
+            }
+            if (lane_change_left == lane_change_right){ 
+            if (car_left_ahead && (lane_change_left>0)){ // check if car is detected ahead in the left lane 
+              lane_change_left -= 3; // penalize changing lane to the left
+              stay_in_lane +=3; // favour staying in the current
+            }else if (car_right_ahead && (lane_change_right>0)){ // check if car is detected ahead in the right lane 
+              lane_change_right -=3; // penalize changing lane to the right
+              stay_in_lane +=3;  // favour staying in the current
+            }
+          }           
           }
           else {
             slow_down = false;
-          } 
+          }
+ 
+          // Executing determined behavior...
 
           if (slow_down){
             std::cout<<"Slowing down..."<<std::endl;
-            brake = (ref_vel - cara_speed)/car_dist;
+            brake = (ref_vel - cara_speed)/car_dist; // Calculate the braking proportional to difference between ego vehicle speed and detected vehicle and also the distance between them.
             ref_vel = ref_vel - brake;
             // std::cout<<"ref_vel v "<<std::endl;
           }else{
             if (ref_vel < 49.5){
-            double accel = (49.5 - ref_vel)/20; 
+            double accel = (49.5 - ref_vel)/40; 
             ref_vel = ref_vel + accel;
             std::cout<<"Speeding up"<<std::endl; 
           }
           }
 
-          if (lane_change_left){
+         // Behavior execution for changing lanes.
+
+          if (lane_change_left > lane_change_right){
             lane = lane - 1;
             std::cout<<"Changing lane to the LEFT"<<std::endl;
               if(lane < 0){
                 lane = 0;
               }
-          }else if (lane_change_right){
+          }else if (lane_change_right > lane_change_left){
             lane = lane + 1;
             std::cout<<"Changing lane to the right"<<std::endl;
               if (lane > 2){
                 lane = 2;
               }
           }
+          // //DEBUG
+          // std::cout << "Change Lane Left: "<< lane_change_left <<std::endl;
+          // std::cout << "Change Lane Right: "<< lane_change_right <<std::endl;
+          // std::cout << "Stay In Lane: "<< stay_in_lane <<std::endl;
+          
 
           /*###################################################    Trajectory Generation     ###############################################################*/
 
