@@ -51,7 +51,8 @@ sudo chmod u+x {simulator_file_name}
 No changes were made in the cmake configuration and the code compiles without an error. A new file was added src/spline.h. It is the Cubic Spline interpolation implementation: a single .h file you can use splines instead of polynomials. It was a great suggestion from the classroom QA video.
 
 Below is the output of the build.sh script 
-`anudeep@anudeep-XPS-15-9550:~/Udacity/Repos/CarND-Path-Planning-Project$ ./build.sh 
+```
+anudeep@anudeep-XPS-15-9550:~/Udacity/Repos/CarND-Path-Planning-Project$ ./build.sh 
 -- The C compiler identification is GNU 5.4.0
 -- The CXX compiler identification is GNU 5.4.0
 -- Check for working C compiler: /usr/bin/cc
@@ -73,7 +74,7 @@ Scanning dependencies of target path_planning
 [ 50%] Building CXX object CMakeFiles/path_planning.dir/src/main.cpp.o
 [100%] Linking CXX executable path_planning
 [100%] Built target path_planning
-`
+```
 
 ### Valid Trajectories 
 #### 1. The car is able to drive at least 4.32 miles without incident.
