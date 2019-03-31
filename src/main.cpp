@@ -8,6 +8,7 @@
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
+#include "PID.h"
 
 // for convenience
 using nlohmann::json;
@@ -30,6 +31,10 @@ int main() {
   string map_file_ = "../data/highway_map.csv";
   // The max s value before wrapping around the track back to 0
   double max_s = 6945.554;
+
+  //Initiate PID Controller
+  PID vel_control;
+  vel_control.Init(0.005, 0.0, 0.0);
   
 
   std::ifstream in_map_(map_file_.c_str(), std::ifstream::in);
@@ -56,7 +61,7 @@ int main() {
   
 
   h.onMessage([&ref_vel,&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
-               &map_waypoints_dx,&map_waypoints_dy,&lane]
+               &map_waypoints_dx,&map_waypoints_dy,&lane,&vel_control]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -188,10 +193,19 @@ int main() {
           // std::cout << "car right: "<< car_right <<std::endl;
           // std::cout << "car dist: "<< car_dist <<std::endl;
           
-          double throttle_p = 0.5;
-          double brake = 0;
+          // double throttle_p = 0.5;
+          // double brake = 0;
+          double speed_change = 0;
+          // double vel_error = ref_vel - cara_speed; 
+          double vel_error = ref_vel - cara_speed; 
+          vel_control.UpdateError(vel_error);
+          speed_change = 2 * vel_control.TotalError();
 
-          brake = (ref_vel - cara_speed)/car_dist;
+          int current_lane = lane;
+          
+
+          // brake = (ref_vel - cara_speed)/car_dist;
+          
           
           // Determine what behavior to execute...
 
@@ -231,14 +245,17 @@ int main() {
 
           if (slow_down){
             std::cout<<"Slowing down..."<<std::endl;
-            brake = (ref_vel - cara_speed)/car_dist; // Calculate the braking proportional to difference between ego vehicle speed and detected vehicle and also the distance between them.
-            ref_vel = ref_vel - brake;
+            // brake = (ref_vel - cara_speed)/car_dist; // Calculate the braking proportional to difference between ego vehicle speed and detected vehicle and also the distance between them.
+            ref_vel = ref_vel - speed_change;
             // std::cout<<"ref_vel v "<<std::endl;
           }else{
             if (ref_vel < 49.5){
-            double accel = (49.5 - ref_vel)/40; 
-            ref_vel = ref_vel + accel;
-            std::cout<<"Speeding up"<<std::endl; 
+              double accel;
+              double vel_error = ref_vel - 49.5; 
+              vel_control.UpdateError(vel_error);
+              accel = vel_control.TotalError(); 
+              ref_vel = ref_vel - 2*accel;
+              std::cout<<"Speeding up"<<std::endl; 
           }
           }
 
@@ -257,6 +274,8 @@ int main() {
                 lane = 2;
               }
           }
+          // 
+
           // //DEBUG
           // std::cout << "Change Lane Left: "<< lane_change_left <<std::endl;
           // std::cout << "Change Lane Right: "<< lane_change_right <<std::endl;
@@ -302,6 +321,7 @@ int main() {
             ptsy.push_back(ref_car_y);
           }
 
+          //DEBUG
           // std::cout << "ptsx: ";
           // printvec(ptsx);
           // std::cout<< std::endl;
@@ -324,6 +344,7 @@ int main() {
           ptsx.push_back(pt2[0]);
           ptsy.push_back(pt2[1]);
 
+          //DEBUG
           // std::cout << "ptsx: " << ptsx.size() << std::endl;
           // std::cout << "ptsx: ";
           // printvec(ptsx);
@@ -339,6 +360,7 @@ int main() {
             ptsy[i] = shift_x*sin(0-ref_car_yaw)+shift_y*cos(0-ref_car_yaw);
           }
 
+          //DEBUG
           // std::cout << "ptsx: ";
           // printvec(ptsx);
           // std::cout<< std::endl;
@@ -356,6 +378,8 @@ int main() {
             next_x_vals.push_back(previous_path_x[i]);
             next_y_vals.push_back(previous_path_y[i]);
           }
+
+          //DEBUG
           // std::cout<<"prev size: "<< previous_path_x.size() << std::endl;
           // std::cout << "next_xvals: ";
           // printvec(next_x_vals);
@@ -397,12 +421,12 @@ int main() {
             next_y_vals.push_back(y_point);
 
           }
+
+          //DEBUG
           // std::cout<<"prev size: "<< previous_path_x.size() << std::endl;
           // std::cout << "next_xvals: ";
           // printvec(next_x_vals);
           // std::cout<< std::endl;
-
-
           
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
