@@ -48,7 +48,7 @@ sudo chmod u+x {simulator_file_name}
 ## Rubic Points
 ### Compilation 
 #### 1. The code compiles correctly.
-No changes were made in the cmake configuration and the code compiles without an error. A new file was added src/spline.h. It is the Cubic Spline interpolation implementation: a single .h file you can use splines instead of polynomials. It was a great suggestion from the classroom QA video.
+The cmake configuration was edited to add PID controller and the code compiles without an error. A new file was added src/spline.h. It is the Cubic Spline interpolation implementation: a single .h file you can use splines instead of polynomials. It was a great suggestion from the classroom QA video.
 
 Below is the output of the build.sh script 
 ```
@@ -81,7 +81,7 @@ Scanning dependencies of target path_planning
 The car was able to drive more 4.32 miles comfortably at a average speed of 47.5 mph.
 ![image2](./images/img2.png)
 
-Then I ran the car for over 9 miles without any incedent.
+Then I ran the car for over 20 miles without any incedent.
 ![image1](./images/img1.png)
 
 #### 2. The car drives according to the speed limit.
@@ -115,7 +115,7 @@ This part decides what to do:
   - If we have a car in front of us, do we change lanes ?
   - Do we speed up or slow down ?
 
-Based on the sensor fusion data of the situation we are in, this code increases the speed, decrease speed, or make a lane change when it is safe. Instead of increasing the speed at this part of the code, a `brake` and `accel` are created to be added to the `ref_vel` which is later used for speed changes when generating the trajectory in the last part of the code. This approach makes the car more responsive acting faster to changing situations like a car in front of it trying to apply breaks to cause a collision.
+Based on the sensor fusion data of the situation we are in, this code increases the speed, decrease speed, or make a lane change when it is safe. Instead of increasing the speed at this part of the code, The PID controller is used to calculate the speed change to be added to the `ref_vel` which is later used for speed changes when generating the trajectory in the last part of the code. This approach makes the car more responsive acting faster to changing situations like a car in front of it trying to apply breaks to cause a collision.
 
 #### Trajectory Generation
 This code does the calculation of the trajectory based on the speed and lane output from the behavior, car coordinates and past path points.
