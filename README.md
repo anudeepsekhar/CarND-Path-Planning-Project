@@ -78,7 +78,7 @@ Scanning dependencies of target path_planning
 
 ### Valid Trajectories 
 #### 1. The car is able to drive at least 4.32 miles without incident.
-The car was able to drive more 4.32 miles comfortably at a average speed of 47.5 mph.
+The car was able to drive more than 4.32 miles comfortably at a average speed of 47.5 mph.
 ![image2](./images/img2.png)
 
 Then I ran the car for over 20 miles without any incedent.
