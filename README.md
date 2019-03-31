@@ -82,7 +82,7 @@ The car was able to drive more 4.32 miles comfortably at a average speed of 47.5
 ![image2](./images/img2.png)
 
 Then I ran the car for over 20 miles without any incedent.
-![image1](./images/img1.png)
+![image1](./images/img3.png)
 
 #### 2. The car drives according to the speed limit.
 No speed limit red message was seen.
