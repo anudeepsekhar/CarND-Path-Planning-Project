@@ -220,7 +220,7 @@ int main() {
                 lane_change_left += 3; // penalize changing lane to the left
                 
               }else{ // check space detected ahead in the right lane 
-                lane_change_right -=3; // penalize changing lane to the right
+                lane_change_right +=3; // penalize changing lane to the right
                 
               }
             }else if (!car_left){ // check if lane change left possible
