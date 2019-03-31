@@ -100,9 +100,7 @@ int main() {
 
           json msgJson;
 
-          int path_size = previous_path_x.size();
-          
-          
+          int path_size = previous_path_x.size();        
 
           vector<double> next_x_vals;
           vector<double> next_y_vals;
@@ -131,6 +129,8 @@ int main() {
           bool slow_down = false;
           double car_dist = 1;
           double cara_speed = ref_vel; 
+          double space_l = 10000;
+          double space_r = 10000;
 
           //check each car in sensor fusion
           int car_lane = 1;
@@ -163,20 +163,22 @@ int main() {
               }
               }
               else if((car_lane - lane == -1)){// Check the lane to the left
-                if (((check_car_s < car_s) && ((car_s - check_car_s-15) < car_width))||((check_car_s > car_s) && ((check_car_s - car_s) < car_width))){
+                if (((check_car_s < car_s) && ((car_s - check_car_s - 15) < car_width)) || ((check_car_s > car_s) && ((check_car_s - car_s) < car_width))){
                   car_left = true;
+                  if ( car_dist < space_l) {space_l = car_dist;}
                 }
-                if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width+3))){ // Check for car a little ahead in the lane to the left
-                  car_left_ahead = true;
-                }
+                // if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width + 5))){ // Check for car a little ahead in the lane to the left
+                //   car_left_ahead = true;
+                // }
               }
               else if((car_lane - lane == 1)){// Check the lane to the right
                 if (((check_car_s < car_s) && ((car_s - check_car_s-15) < car_width))||((check_car_s > car_s) && ((check_car_s - car_s) < car_width))){
                   car_right = true;
+                  if ( car_dist < space_r) {space_r = car_dist;}
                 }
-                if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width + 3))){// Check for car a little ahead in the lane to the right
-                  car_right_ahead = true;
-                }
+                // if (((check_car_s > car_s) && ((check_car_s - car_s) < car_width + 3))){// Check for car a little ahead in the lane to the right
+                //   car_right_ahead = true;
+                // }
               }else if(lane == 0){
                 car_left = true;
               }else if (lane == 2){
@@ -213,31 +215,30 @@ int main() {
             slow_down = true;
             stay_in_lane -= 3; // penalize staying in the lane
 
-            if (!car_left){ // check if lane change left possible
-              slow_down = false;
-              lane_change_left += 5; // Favor changing lane to the left
-              stay_in_lane -= 5; // Further penalize staying in current lane because lane change is possible
-              
+            if (!car_right && !car_left){               
+              if (space_l>space_r){ // check space detected ahead in the left lane 
+                lane_change_left += 3; // penalize changing lane to the left
+                
+              }else{ // check space detected ahead in the right lane 
+                lane_change_right -=3; // penalize changing lane to the right
+                
+              }
+            }else if (!car_left){ // check if lane change left possible
+            slow_down = false;
+            lane_change_left += 5; // Favor changing lane to the left
+            stay_in_lane -= 5; // Further penalize staying in current lane because lane change is possible
+            
             }else if(!car_right){ // check if lane change right possible
               slow_down = false;
               lane_change_right += 5; // Favor changing lane to the right
               stay_in_lane -= 5; // Further penalize staying in current lane because lane change is possible
-              
+            
             }else{
-              stay_in_lane = 10; // Favour staying in current lane
-              slow_down = true;
+            stay_in_lane = 10; // Favour staying in current lane
+            slow_down = true;
             }
-            if (lane_change_left == lane_change_right){ 
-            if (car_left_ahead && (lane_change_left>0)){ // check if car is detected ahead in the left lane 
-              lane_change_left -= 3; // penalize changing lane to the left
-              stay_in_lane +=3; // favour staying in the current
-            }else if (car_right_ahead && (lane_change_right>0)){ // check if car is detected ahead in the right lane 
-              lane_change_right -=3; // penalize changing lane to the right
-              stay_in_lane +=3;  // favour staying in the current
-            }
-          }           
-          }
-          else {
+            
+          }else {
             slow_down = false;
           }
  
@@ -251,9 +252,11 @@ int main() {
           }else{
             if (ref_vel < 49.5){
               double accel;
-              double vel_error = ref_vel - 49.5; 
+              double vel_error = ref_vel - 49.5; // Calculate error for PID
+
               vel_control.UpdateError(vel_error);
               accel = vel_control.TotalError(); 
+              
               ref_vel = ref_vel - 2*accel;
               std::cout<<"Speeding up"<<std::endl; 
           }
@@ -273,6 +276,8 @@ int main() {
               if (lane > 2){
                 lane = 2;
               }
+          }else {
+            lane = current_lane;
           }
           // 
 
